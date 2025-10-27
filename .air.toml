@@ -1,0 +1,15 @@
+# air-verse/air compatible config (v1.63+)
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# Build a real binary (verbose) so Air can run it and restart on changes
+cmd          = "go build -v -o ./tmp/server ./server"
+bin          = "./tmp/server"
+full_bin     = ""
+include_ext  = ["go", "mod", "sum"]
+exclude_dir  = ["tmp", "node_modules", ".git", "deploy", "public"]
+exclude_regex = ["_test\\.go$"]
+
+[log]
+time = true

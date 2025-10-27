@@ -1,0 +1,50 @@
+name: calculator-api
+
+services:
+  server-dev:
+    image: golang:1.23-alpine
+    container_name: server-dev
+    profiles: ["dev"]
+    working_dir: /app
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        apk add --no-cache git
+        export PATH="/usr/local/go/bin:/go/bin:$PATH"
+        echo ">> command -v go"; command -v go || true
+        echo ">> go version"; go version
+        go env -w GOMODCACHE=/go/pkg/mod
+        go env -w GOBIN=/go/bin
+        go mod download
+        # install Air from the new module path
+        go install github.com/air-verse/air@latest
+        exec /go/bin/air -c .air.toml
+    environment:
+      PORT: "8080"
+      LOG_JSON: "true"
+      GOTOOLCHAIN: "auto"
+    volumes:
+      - ./:/app
+      - gocache:/go/pkg/mod
+    ports:
+      - "8080:8080"
+
+
+
+  # ---------------- Production-like ----------------
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: server:local
+    container_name: server
+    profiles: ["prod"]
+    environment:
+      PORT: "8080"
+      LOG_JSON: "true"
+    ports:
+      - "8080:8080"
+
+volumes:
+  gocache:
