@@ -1,0 +1,228 @@
+{
+  "info": {
+    "name": "Calculator API",
+    "_postman_id": "b6a2e5b1-77f2-4d7a-8f9b-collection-demo",
+    "description": "Requests + tests for your Calculator API (health, ops, history, errors). Set the {{baseUrl}} in your environment.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health: GET /health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "pm.test('body is JSON or text', () => {",
+              "  try { JSON.parse(pm.response.text()); pm.expect(true).to.be.true; }",
+              "  catch(_) { pm.expect(pm.response.text().length).to.be.greaterThan(0); }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Add: POST /v1/add",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"a\": 2,\n  \"b\": 3\n}" },
+        "url": { "raw": "{{baseUrl}}/v1/add", "host": ["{{baseUrl}}"], "path": ["v1", "add"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('has result', () => pm.expect(json).to.have.property('result'));",
+              "pm.test('result is number', () => pm.expect(json.result).to.be.a('number'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subtract: POST /v1/subtract",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"a\": 10,\n  \"b\": 4.5\n}" },
+        "url": { "raw": "{{baseUrl}}/v1/subtract", "host": ["{{baseUrl}}"], "path": ["v1", "subtract"] }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('status 200', () => pm.response.to.have.status(200));",
+        "pm.expect(pm.response.json()).to.have.property('result');"
+      ], "type": "text/javascript" } }]
+    },
+    {
+      "name": "Multiply: POST /v1/multiply",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"a\": 3,\n  \"b\": 7\n}" },
+        "url": { "raw": "{{baseUrl}}/v1/multiply", "host": ["{{baseUrl}}"], "path": ["v1", "multiply"] }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('status 200', () => pm.response.to.have.status(200));",
+        "pm.expect(pm.response.json()).to.have.property('result');"
+      ], "type": "text/javascript" } }]
+    },
+    {
+      "name": "Divide: POST /v1/divide",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"a\": 22,\n  \"b\": 7\n}" },
+        "url": { "raw": "{{baseUrl}}/v1/divide", "host": ["{{baseUrl}}"], "path": ["v1", "divide"] }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('status 200', () => pm.response.to.have.status(200));",
+        "pm.expect(pm.response.json()).to.have.property('result');"
+      ], "type": "text/javascript" } }]
+    },
+    {
+      "name": "Divide by zero (expect 400 problem): POST /v1/divide",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"a\": 5,\n  \"b\": 0\n}" },
+        "url": { "raw": "{{baseUrl}}/v1/divide", "host": ["{{baseUrl}}"], "path": ["v1", "divide"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 400', () => pm.response.to.have.status(400));",
+            "const p = pm.response.json();",
+            "pm.test('problem envelope', () => {",
+            "  pm.expect(p).to.have.property('title');",
+            "  pm.expect(p).to.have.property('status');",
+            "  pm.expect(p.status).to.eql(400);",
+            "});",
+            "pm.test('title = calculation_error', () => pm.expect(p.title).to.eql('calculation_error'));"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "Query API: GET /v1/calculate?op=add&a=2&b=3",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/v1/calculate?op=add&a=2&b=3",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "calculate"],
+          "query": [
+            { "key": "op", "value": "add" },
+            { "key": "a", "value": "2" },
+            { "key": "b", "value": "3" }
+          ]
+        }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('status 200', () => pm.response.to.have.status(200));",
+        "pm.expect(pm.response.json()).to.have.property('result');"
+      ], "type": "text/javascript" } }]
+    },
+    {
+      "name": "Query API invalid op (expect 400): GET /v1/calculate?op=pow&a=2&b=3",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/v1/calculate?op=pow&a=2&b=3",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "calculate"],
+          "query": [
+            { "key": "op", "value": "pow" },
+            { "key": "a", "value": "2" },
+            { "key": "b", "value": "3" }
+          ]
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 400', () => pm.response.to.have.status(400));",
+            "const p = pm.response.json();",
+            "pm.expect(p.title).to.eql('invalid_op');",
+            "pm.expect(p.status).to.eql(400);"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "History: GET /v1/history",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/v1/history", "host": ["{{baseUrl}}"], "path": ["v1", "history"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "const arr = pm.response.json();",
+            "pm.test('array', () => pm.expect(Array.isArray(arr)).to.be.true);"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "History (limit=2): GET /v1/history?limit=2",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/v1/history?limit=2",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "history"],
+          "query": [{ "key": "limit", "value": "2" }]
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "const arr = pm.response.json();",
+            "pm.test('<= 2 items', () => pm.expect(arr.length).to.be.most(2));"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "History clear: DELETE /v1/history",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{baseUrl}}/v1/history", "host": ["{{baseUrl}}"], "path": ["v1", "history"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" }
+  ]
+}

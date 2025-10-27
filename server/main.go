@@ -19,7 +19,10 @@ func getenv(key, fallback string) string {
 
 func main() {
 	// Respect Cloud Run port environment variable.
-	port := getenv("PORT", "8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Cloud Run will set PORT, but keep a default for local
+	}
 	addr := ":" + port
 
 	// Create service layer (calculator + history)

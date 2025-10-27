@@ -1,37 +1,29 @@
 # ---- Build stage ----
-FROM golang:1.23-alpine AS builder
-
-# Install git (required for Go modules using private repos)
+FROM golang:1.25.3-alpine AS builder
 RUN apk add --no-cache git
+WORKDIR /src
 
-# Set the working directory
-WORKDIR /app
-
-# Copy go.mod and go.sum first for dependency caching
-COPY go.mod go.sum ./
+# If you don't have go.sum, only copy go.mod first
+COPY go.mod ./
 RUN go mod download
 
-# Copy the rest of the source code
+# Copy the rest of your source
 COPY . .
 
-# Build the Go binary statically (no CGO dependencies)
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server ./server
+# Build to a path that won't clash with a "server/" dir in your repo
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -o /out/calcserver ./server
 
 # ---- Runtime stage ----
-FROM alpine:latest
-
-# Minimal CA certificates (for HTTPS clients)
+FROM alpine:3.20
 RUN apk --no-cache add ca-certificates
+WORKDIR /app
 
-# Copy compiled binary from builder
-WORKDIR /root/
-COPY --from=builder /app/server .
+# Copy just the compiled binary
+COPY --from=builder /out/calcserver /usr/local/bin/calcserver
 
-# Cloud Run and other container hosts set $PORT
 ENV PORT=8080
-
-# Expose the port (useful locally)
 EXPOSE 8080
 
-# Run the binary
-CMD ["./server"]
+# Execute the binary (now clearly not a directory)
+CMD ["calcserver"]
